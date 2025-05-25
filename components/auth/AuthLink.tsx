@@ -11,7 +11,7 @@ interface AuthLinkProps extends TouchableOpacityProps {
   linkText: string;
 }
 
-export default function AuthLink({ text, linkText, ...props }: AuthLinkProps) {
+const AuthLink: React.FC<AuthLinkProps> = ({ text, linkText, ...props }) => {
   return (
     <TouchableOpacity style={styles.linkContainer} {...props}>
       <Text style={styles.linkText}>
@@ -19,12 +19,14 @@ export default function AuthLink({ text, linkText, ...props }: AuthLinkProps) {
       </Text>
     </TouchableOpacity>
   );
-}
+};
+
+export default AuthLink;
 
 const styles = StyleSheet.create({
   linkContainer: {
     alignItems: "center",
-    padding: 8,
+    padding: 4,
   },
   linkText: {
     fontSize: 14,

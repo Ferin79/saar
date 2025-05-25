@@ -100,7 +100,6 @@ export default function ForgotPassword() {
               title="Send Reset Link"
               loading={isLoading}
               onPress={handleResetPassword}
-              colors={["#FF5722", "#FF7043", "#FF8A65"]}
             />
           </>
         )}
