@@ -16,16 +16,10 @@ interface AuthInputProps extends TextInputProps {
 const AuthInput = forwardRef<TextInput, AuthInputProps>(
   ({ icon, isPassword = false, style, ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
-    const [isFocused, setIsFocused] = useState(false);
 
     return (
       <View style={styles.inputWrapper}>
-        <View
-          style={[
-            styles.inputContainer,
-            isFocused && styles.inputContainerFocused,
-          ]}
-        >
+        <View style={[styles.inputContainer]}>
           {icon && (
             <Ionicons
               name={icon}
@@ -43,8 +37,6 @@ const AuthInput = forwardRef<TextInput, AuthInputProps>(
             ]}
             placeholderTextColor="#8E8E93"
             secureTextEntry={isPassword && !showPassword}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
             {...props}
           />
           {isPassword && (
@@ -71,7 +63,7 @@ export default AuthInput;
 
 const styles = StyleSheet.create({
   inputWrapper: {
-    marginBottom: 20,
+    marginBottom: 10,
   },
   inputContainer: {
     flexDirection: "row",

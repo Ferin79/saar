@@ -1,14 +1,13 @@
 import { Image } from "expo-image";
 import { Platform, StyleSheet, TouchableOpacity } from "react-native";
 
-import { HelloWave } from "@/components/HelloWave";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useAuthContext } from "@/hooks/useAuthContext";
 
 export default function HomeScreen() {
-  const { logout } = useAuthContext();
+  const { logout, user } = useAuthContext();
 
   return (
     <ParallaxScrollView
@@ -21,8 +20,9 @@ export default function HomeScreen() {
       }
     >
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+        <ThemedText type="title">
+          Welcome! {user?.firstName + " " + user?.lastName}
+        </ThemedText>
       </ThemedView>
 
       <ThemedView style={styles.stepContainer}>
