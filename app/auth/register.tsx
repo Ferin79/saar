@@ -15,7 +15,7 @@ import React, { useRef, useState } from "react";
 import { TextInput } from "react-native";
 
 export default function Register() {
-  const { login, isLoading } = useAuthContext();
+  const { isLoading } = useAuthContext();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -55,7 +55,7 @@ export default function Register() {
 
     try {
       // TODO: Implement registration logic
-      await login();
+
       router.replace("/(app)/(tabs)");
     } catch (error) {
       setError("Registration failed. Please try again.");
@@ -66,7 +66,7 @@ export default function Register() {
   const handleGoogleSignUp = async () => {
     try {
       // TODO: Implement Google sign up logic
-      await login();
+
       router.replace("/(app)/(tabs)");
     } catch (error) {
       console.error("Google sign up error:", error);
