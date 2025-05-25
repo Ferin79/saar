@@ -166,4 +166,27 @@ export class AuthStorageService {
       };
     }
   }
+
+  /**
+   * Update stored tokens after refresh
+   */
+  static async updateTokens(
+    token: string,
+    refreshToken: string,
+    tokenExpires: number
+  ): Promise<void> {
+    try {
+      await Promise.all([
+        SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, token),
+        SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, refreshToken),
+        SecureStore.setItemAsync(
+          STORAGE_KEYS.TOKEN_EXPIRES,
+          tokenExpires.toString()
+        ),
+      ]);
+    } catch (error) {
+      console.error("Error updating tokens:", error);
+      throw new Error("Failed to update tokens");
+    }
+  }
 }

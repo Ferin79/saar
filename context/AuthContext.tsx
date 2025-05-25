@@ -116,6 +116,7 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
     try {
       await logoutUser();
       await clearAuthState();
+      setAuthToken(null);
       setError(null);
     } catch (error) {
       console.error("Error during logout:", error);

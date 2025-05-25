@@ -12,6 +12,12 @@ export interface LoginResponse {
   user: User;
 }
 
+export interface RefreshTokenResponse {
+  token: string;
+  refreshToken: string;
+  tokenExpires: number;
+}
+
 export interface AuthError {
   message: string;
   statusCode?: number;
