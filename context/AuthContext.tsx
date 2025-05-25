@@ -1,4 +1,5 @@
-import { getCurrentUser, loginWithEmail } from "@/services/authApi";
+import { setAuthToken } from "@/services/api";
+import { getCurrentUser, loginWithEmail, logoutUser } from "@/services/authApi";
 import { AuthStorageService } from "@/services/authStorage";
 import { AuthError, LoginRequest, LoginResponse } from "@/types/auth";
 import { User } from "@/types/User";
@@ -15,7 +16,7 @@ export type AuthContextType = {
   isLoading: boolean;
   user: User | null;
   login: (credentials: LoginRequest) => Promise<LoginResponse>;
-  logout: () => void;
+  logout: () => Promise<void>;
   error: string | null;
   clearError: () => void;
   checkAuthStatus: () => Promise<void>;
@@ -29,100 +30,118 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const clearAuthState = useCallback(async () => {
+    await AuthStorageService.clearAuthData();
+    setAuthToken(null);
+    setIsAuthenticated(false);
+    setUser(null);
+  }, []);
+
+  const setAuthenticatedState = useCallback((user: User, token: string) => {
+    setAuthToken(token);
+    setUser(user);
+    setIsAuthenticated(true);
+  }, []);
+
+  const setUnauthenticatedState = useCallback(() => {
+    setAuthToken(null);
+    setIsAuthenticated(false);
+    setUser(null);
+  }, []);
+
   const checkAuthStatus = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
 
       const authState = await AuthStorageService.getStoredAuthState();
 
-      if (authState.token && authState.isValid) {
-        try {
-          const user = await getCurrentUser();
-          setUser(user);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error("Error fetching user data from API:", error);
-          await AuthStorageService.clearAuthData();
-          setIsAuthenticated(false);
-          setUser(null);
-        }
-      } else if (authState.token && !authState.isValid) {
-        await AuthStorageService.clearAuthData();
-        setIsAuthenticated(false);
-        setUser(null);
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
+      // No token found - user is not authenticated
+      if (!authState.token) {
+        setUnauthenticatedState();
+        return;
+      }
+
+      // Token exists but is expired - clear auth data
+      if (!authState.isValid) {
+        await clearAuthState();
+        return;
+      }
+
+      // Token is valid - try to fetch current user
+      try {
+        setAuthToken(authState.token);
+        const user = await getCurrentUser();
+        setAuthenticatedState(user, authState.token);
+      } catch (error) {
+        console.error("Error fetching user data from API:", error);
+        await clearAuthState();
       }
     } catch (error) {
       console.error("Error checking auth status:", error);
-      await AuthStorageService.clearAuthData();
-      setIsAuthenticated(false);
-      setUser(null);
+      await clearAuthState();
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [clearAuthState, setAuthenticatedState, setUnauthenticatedState]);
 
+  // Initialize auth status on mount
   useEffect(() => {
     checkAuthStatus();
   }, [checkAuthStatus]);
 
-  const login = async (credentials: LoginRequest): Promise<LoginResponse> => {
+  const login = useCallback(
+    async (credentials: LoginRequest): Promise<LoginResponse> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await loginWithEmail(credentials);
+        await AuthStorageService.storeAuthData(response);
+        setAuthenticatedState(response.user, response.token);
+        return response;
+      } catch (err) {
+        const authError = err as AuthError;
+        setError(authError.message);
+        throw authError;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setAuthenticatedState]
+  );
+
+  const logout = useCallback(async (): Promise<void> => {
     setIsLoading(true);
-    setError(null);
 
     try {
-      const response = await loginWithEmail(credentials);
-      await AuthStorageService.storeAuthData(response);
-      setIsAuthenticated(true);
-      setUser(response.user);
-      return response;
-    } catch (err) {
-      const authError = err as AuthError;
-      setError(authError.message);
-      throw authError;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    console.log("Logging out...");
-    setIsLoading(true);
-
-    try {
-      // Clear stored tokens and user data
-      await AuthStorageService.clearAuthData();
-
-      setIsAuthenticated(false);
-      setUser(null);
+      await logoutUser();
+      await clearAuthState();
       setError(null);
     } catch (error) {
       console.error("Error during logout:", error);
+      await clearAuthState();
+      setError(null);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [clearAuthState]);
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     setError(null);
+  }, []);
+
+  const contextValue: AuthContextType = {
+    isAuthenticated,
+    isLoading,
+    user,
+    login,
+    logout,
+    error,
+    clearError,
+    checkAuthStatus,
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        isLoading,
-        user,
-        login,
-        logout,
-        error,
-        clearError,
-        checkAuthStatus,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };

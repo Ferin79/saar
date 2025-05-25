@@ -10,23 +10,14 @@ export const api = axios.create({
   },
 });
 
-// Request interceptor to add Bearer token to all requests
-api.interceptors.request.use(
-  async (config) => {
-    try {
-      const token = await AuthStorageService.getAccessToken();
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch (error) {
-      console.error("Error getting access token for request:", error);
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+// Function to set the authorization token in default headers
+export const setAuthToken = (token: string | null) => {
+  if (token) {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    delete api.defaults.headers.common["Authorization"];
   }
-);
+};
 
 // Response interceptor to handle token expiration
 api.interceptors.response.use(
@@ -35,9 +26,10 @@ api.interceptors.response.use(
   },
   async (error) => {
     if (error.response?.status === 401) {
-      // Token might be expired, clear auth data
+      // Token might be expired, clear auth data and remove token from headers
       try {
         await AuthStorageService.clearAuthData();
+        setAuthToken(null);
       } catch (clearError) {
         console.error("Error clearing auth data:", clearError);
       }

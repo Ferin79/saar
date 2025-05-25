@@ -38,4 +38,18 @@ export const getCurrentUser = async (): Promise<User> => {
   }
 };
 
+export const logoutUser = async (): Promise<void> => {
+  try {
+    await api.post("/auth/logout");
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const message =
+        error.response?.data?.message || "Logout failed. Please try again.";
+      const statusCode = error.response?.status;
+      throw { message, statusCode };
+    }
+    throw { message: "Network error. Please check your connection." };
+  }
+};
+
 export default api;
