@@ -7,6 +7,7 @@ import {
   Animated,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -292,164 +293,162 @@ export default function SignIn() {
         </Animated.View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <View style={styles.webContainer}>
-          <View style={styles.scrollView}>
-            {/* Header Section */}
-            <View style={styles.header}>
-              <Animated.View style={[styles.logoContainer, breathingStyle]}>
-                <Text style={styles.logo}>ॐ</Text>
-              </Animated.View>
-              <Text style={styles.appName}>Saar</Text>
-              <Text style={styles.subtitle}>Begin your sacred journey</Text>
-            </View>
-
-            {/* Login Form */}
-            <View style={styles.formContainer}>
-              {/* Email Input */}
-              <View style={styles.inputWrapper}>
-                <View style={[styles.inputContainer]}>
-                  <Ionicons
-                    name="mail-outline"
-                    size={20}
-                    color={"#8E8E93"}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Email"
-                    placeholderTextColor="#8E8E93"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    textContentType="emailAddress"
-                    returnKeyType="next"
-                    onSubmitEditing={() => passwordInputRef.current?.focus()}
-                  />
-                </View>
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View style={styles.webContainer}>
+            <View style={styles.scrollView}>
+              {/* Header Section */}
+              <View style={styles.header}>
+                <Animated.View style={[styles.logoContainer, breathingStyle]}>
+                  <Text style={styles.logo}>ॐ</Text>
+                </Animated.View>
+                <Text style={styles.appName}>Saar</Text>
+                <Text style={styles.subtitle}>Begin your sacred journey</Text>
               </View>
 
-              {/* Password Input */}
-              <View style={styles.inputWrapper}>
-                <View style={[styles.inputContainer]}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={"#8E8E93"}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    ref={passwordInputRef}
-                    style={[styles.textInput, styles.passwordInput]}
-                    placeholder="Password"
-                    placeholderTextColor="#8E8E93"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    textContentType="password"
-                    returnKeyType="done"
-                    onSubmitEditing={handleEmailSignIn}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeIcon}
-                  >
+              {/* Login Form */}
+              <View style={styles.formContainer}>
+                {/* Email Input */}
+                <View style={styles.inputWrapper}>
+                  <View style={[styles.inputContainer]}>
                     <Ionicons
-                      name={showPassword ? "eye-outline" : "eye-off-outline"}
+                      name="mail-outline"
                       size={20}
-                      color="#8E8E93"
+                      color={"#8E8E93"}
+                      style={styles.inputIcon}
                     />
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Email"
+                      placeholderTextColor="#8E8E93"
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      textContentType="emailAddress"
+                      returnKeyType="next"
+                      onSubmitEditing={() => passwordInputRef.current?.focus()}
+                    />
+                  </View>
+                </View>
+
+                {/* Password Input */}
+                <View style={styles.inputWrapper}>
+                  <View style={[styles.inputContainer]}>
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={20}
+                      color={"#8E8E93"}
+                      style={styles.inputIcon}
+                    />
+                    <TextInput
+                      ref={passwordInputRef}
+                      style={[styles.textInput, styles.passwordInput]}
+                      placeholder="Password"
+                      placeholderTextColor="#8E8E93"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      textContentType="password"
+                      returnKeyType="done"
+                      onSubmitEditing={handleEmailSignIn}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={styles.eyeIcon}
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye-outline" : "eye-off-outline"}
+                        size={20}
+                        color="#8E8E93"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Forgot Password */}
+                <TouchableOpacity
+                  style={styles.forgotPasswordButton}
+                  onPress={goToForgotPassword}
+                >
+                  <Text style={styles.forgotPasswordText}>
+                    Forgot Password?
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Sign In Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.signInButton,
+                    isLoading && styles.buttonDisabled,
+                  ]}
+                  onPress={handleEmailSignIn}
+                  disabled={isLoading}
+                >
+                  <LinearGradient
+                    colors={["#8E24AA", "#AB47BC", "#CE93D8"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.signInGradient}
+                  >
+                    {isLoading ? (
+                      <Text style={styles.signInButtonText}>Signing In...</Text>
+                    ) : (
+                      <Text style={styles.signInButtonText}>Sign In</Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                {/* Divider */}
+                <View style={styles.dividerContainer}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>or</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                {/* Google Sign In Button */}
+                <TouchableOpacity
+                  style={styles.googleButton}
+                  onPress={handleGoogleSignIn}
+                  disabled={isLoading}
+                >
+                  <View style={styles.googleButtonContent}>
+                    <Text style={styles.googleIcon}>G</Text>
+                    <Text style={styles.googleButtonText}>
+                      Continue with Google
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Sign Up Link */}
+                <View style={styles.signUpContainer}>
+                  <Text style={styles.signUpText}>
+                    Don&apos;t have an account?{" "}
+                  </Text>
+                  <TouchableOpacity onPress={goToRegister}>
+                    <Text style={styles.signUpLink}>Sign Up</Text>
                   </TouchableOpacity>
                 </View>
               </View>
-
-              {/* Forgot Password */}
-              <TouchableOpacity
-                style={styles.forgotPasswordButton}
-                onPress={goToForgotPassword}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
-
-              {/* Sign In Button */}
-              <TouchableOpacity
-                style={[
-                  styles.signInButton,
-                  isLoading && styles.buttonDisabled,
-                ]}
-                onPress={handleEmailSignIn}
-                disabled={isLoading}
-              >
-                <LinearGradient
-                  colors={["#8E24AA", "#AB47BC", "#CE93D8"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.signInGradient}
-                >
-                  {isLoading ? (
-                    <Text style={styles.signInButtonText}>Signing In...</Text>
-                  ) : (
-                    <Text style={styles.signInButtonText}>Sign In</Text>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-
-              {/* Divider */}
-              <View style={styles.dividerContainer}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              {/* Google Sign In Button */}
-              <TouchableOpacity
-                style={styles.googleButton}
-                onPress={handleGoogleSignIn}
-                disabled={isLoading}
-              >
-                <View style={styles.googleButtonContent}>
-                  <Text style={styles.googleIcon}>G</Text>
-                  <Text style={styles.googleButtonText}>
-                    Continue with Google
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              {/* Sign Up Link */}
-              <View style={styles.signUpContainer}>
-                <Text style={styles.signUpText}>
-                  Don&apos;t have an account?{" "}
-                </Text>
-                <TouchableOpacity onPress={goToRegister}>
-                  <Text style={styles.signUpLink}>Sign Up</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Quote Section */}
-            <View style={styles.quoteContainer}>
-              <Text style={styles.quote}>
-                &ldquo;You have the right to perform your actions, but you are
-                not entitled to the fruits of action.&rdquo;
-              </Text>
-              <Text style={styles.quoteSource}>- Bhagavad Gita 2.47</Text>
             </View>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   mainContainer: {
+    flex: 1,
+  },
+  safeArea: {
     flex: 1,
   },
   gradient: {
@@ -555,6 +554,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     marginBottom: 40,
+    marginTop: 20,
   },
   logoContainer: {
     width: 80,
