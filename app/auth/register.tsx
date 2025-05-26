@@ -10,67 +10,93 @@ import {
   GoogleAuthButton,
 } from "@/components/auth";
 import { useAuthContext } from "@/hooks/useAuthContext";
+import { RegisterFormData, registerValidationSchema } from "@/schemas/auth";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import { TextInput } from "react-native";
 
 export default function Register() {
-  const { isLoading } = useAuthContext();
-  const [fullName, setFullName] = useState("");
+  const { register, isLoading, error, clearError } = useAuthContext();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
+  const lastNameInputRef = useRef<TextInput>(null);
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
-  const confirmPasswordInputRef = useRef<TextInput>(null);
 
-  const validateForm = () => {
-    if (!fullName.trim()) {
-      setError("Please enter your full name");
+  const validateForm = async (): Promise<boolean> => {
+    try {
+      await registerValidationSchema.validate(
+        { firstName, lastName, email, password },
+        { abortEarly: false }
+      );
+      setValidationErrors({});
+      return true;
+    } catch (err: any) {
+      const errors: Record<string, string> = {};
+      if (err.inner) {
+        err.inner.forEach((error: any) => {
+          if (error.path) {
+            errors[error.path] = error.message;
+          }
+        });
+      }
+      setValidationErrors(errors);
       return false;
     }
-
-    if (!email.trim()) {
-      setError("Please enter your email address");
-      return false;
-    }
-
-    if (!email.includes("@")) {
-      setError("Please enter a valid email address");
-      return false;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      return false;
-    }
-
-    setError("");
-    return true;
   };
 
   const handleRegister = async () => {
-    if (!validateForm()) return;
+    clearError();
+    setValidationErrors({});
+
+    const isValid = await validateForm();
+    if (!isValid) return;
 
     try {
-      // TODO: Implement registration logic
-
+      await register({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        password,
+      });
       router.replace("/(app)/(tabs)");
     } catch (error) {
-      setError("Registration failed. Please try again.");
       console.error("Registration error:", error);
     }
   };
 
   const handleGoogleSignUp = async () => {
-    try {
-      // TODO: Implement Google sign up logic
+    // TODO: Implement Google sign up logic
+    console.log("Google sign up not implemented yet");
+  };
 
-      router.replace("/(app)/(tabs)");
-    } catch (error) {
-      console.error("Google sign up error:", error);
-      setError("Google sign up failed. Please try again.");
+  const handleInputChange = (field: keyof RegisterFormData, value: string) => {
+    // Clear errors when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+    if (error) {
+      clearError();
+    }
+
+    if (field === "firstName") {
+      setFirstName(value);
+    } else if (field === "lastName") {
+      setLastName(value);
+    } else if (field === "email") {
+      setEmail(value);
+    } else if (field === "password") {
+      setPassword(value);
     }
   };
 
@@ -83,30 +109,48 @@ export default function Register() {
       <AuthHeader title="Join Saar" subtitle="Create your spiritual account" />
 
       <AuthFormContainer>
-        {error ? <AuthMessage message={error} type="error" /> : null}
+        {/* Display API errors */}
+        {error && <AuthMessage message={error} type="error" />}
+
         <AuthInput
           icon="person-outline"
-          placeholder="Full Name"
-          value={fullName}
-          onChangeText={(text) => {
-            setFullName(text);
-            if (error) setError("");
-          }}
+          placeholder="First Name"
+          value={firstName}
+          onChangeText={(value) => handleInputChange("firstName", value)}
           autoCapitalize="words"
           autoCorrect={false}
-          textContentType="name"
+          textContentType="givenName"
+          returnKeyType="next"
+          onSubmitEditing={() => lastNameInputRef.current?.focus()}
+        />
+        {/* Display first name validation error */}
+        {validationErrors.firstName && (
+          <AuthMessage message={validationErrors.firstName} type="error" />
+        )}
+
+        <AuthInput
+          ref={lastNameInputRef}
+          icon="person-outline"
+          placeholder="Last Name"
+          value={lastName}
+          onChangeText={(value) => handleInputChange("lastName", value)}
+          autoCapitalize="words"
+          autoCorrect={false}
+          textContentType="familyName"
           returnKeyType="next"
           onSubmitEditing={() => emailInputRef.current?.focus()}
         />
+        {/* Display last name validation error */}
+        {validationErrors.lastName && (
+          <AuthMessage message={validationErrors.lastName} type="error" />
+        )}
+
         <AuthInput
           ref={emailInputRef}
           icon="mail-outline"
           placeholder="Email"
           value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            if (error) setError("");
-          }}
+          onChangeText={(value) => handleInputChange("email", value)}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
@@ -114,22 +158,28 @@ export default function Register() {
           returnKeyType="next"
           onSubmitEditing={() => passwordInputRef.current?.focus()}
         />
+        {/* Display email validation error */}
+        {validationErrors.email && (
+          <AuthMessage message={validationErrors.email} type="error" />
+        )}
+
         <AuthInput
           ref={passwordInputRef}
           icon="lock-closed-outline"
           placeholder="Password"
           value={password}
-          onChangeText={(text) => {
-            setPassword(text);
-            if (error) setError("");
-          }}
+          onChangeText={(value) => handleInputChange("password", value)}
           isPassword
           autoCapitalize="none"
           autoCorrect={false}
           textContentType="newPassword"
-          returnKeyType="next"
-          onSubmitEditing={() => confirmPasswordInputRef.current?.focus()}
+          returnKeyType="done"
+          onSubmitEditing={handleRegister}
         />
+        {/* Display password validation error */}
+        {validationErrors.password && (
+          <AuthMessage message={validationErrors.password} type="error" />
+        )}
 
         <AuthButton
           title="Create Account"

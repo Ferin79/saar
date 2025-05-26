@@ -1,7 +1,18 @@
 import { setAuthToken } from "@/services/api";
-import { getCurrentUser, loginWithEmail, logoutUser } from "@/services/authApi";
+import {
+  getCurrentUser,
+  loginWithEmail,
+  logoutUser,
+  registerWithEmail,
+} from "@/services/authApi";
 import { AuthStorageService } from "@/services/authStorage";
-import { AuthError, LoginRequest, LoginResponse } from "@/types/auth";
+import {
+  AuthError,
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
+} from "@/types/auth";
 import { User } from "@/types/User";
 import {
   createContext,
@@ -16,6 +27,7 @@ export type AuthContextType = {
   isLoading: boolean;
   user: User | null;
   login: (credentials: LoginRequest) => Promise<LoginResponse>;
+  register: (userData: RegisterRequest) => Promise<RegisterResponse>;
   logout: () => Promise<void>;
   error: string | null;
   clearError: () => void;
@@ -110,13 +122,33 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
     [setAuthenticatedState]
   );
 
+  const register = useCallback(
+    async (userData: RegisterRequest): Promise<RegisterResponse> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await registerWithEmail(userData);
+        await AuthStorageService.storeAuthData(response);
+        setAuthenticatedState(response.user, response.token);
+        return response;
+      } catch (err) {
+        const authError = err as AuthError;
+        setError(authError.message);
+        throw authError;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setAuthenticatedState]
+  );
+
   const logout = useCallback(async (): Promise<void> => {
     setIsLoading(true);
 
     try {
       await logoutUser();
       await clearAuthState();
-      setAuthToken(null);
       setError(null);
     } catch (error) {
       console.error("Error during logout:", error);
@@ -136,6 +168,7 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
     isLoading,
     user,
     login,
+    register,
     logout,
     error,
     clearError,
